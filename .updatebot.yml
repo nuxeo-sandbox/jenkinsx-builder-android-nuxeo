@@ -1,0 +1,5 @@
+github:
+  organisations:
+  - name: nuxeo-sandbox
+    repositories:
+    - name: builder-android-nuxeo
