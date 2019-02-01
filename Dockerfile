@@ -84,3 +84,5 @@ RUN /bin/bash -l -c "gem install rdoc"
 # Fastlane
 RUN /bin/bash -l -c "gem install fastlane -NV"
 ENV FASTLANE_DISABLE_COLORS 1
+
+ENTRYPOINT ["/bin/bash", "-l", "-c"]
