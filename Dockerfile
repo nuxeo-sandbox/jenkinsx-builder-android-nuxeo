@@ -75,9 +75,6 @@ RUN gpg --keyserver hkp://pool.sks-keyservers.net --recv-keys 409B6B1796C275462A
   && curl -sSL https://get.rvm.io | bash -s stable
 RUN /bin/bash -l -c "/etc/profile.d/rvm.sh && rvm reload && rvm install ruby-${RUBY_VERSION}"
 
-ENV GEM_HOME /root/.gem/ruby-${RUBY_VERSION}
-ENV PATH ${GEM_HOME}/bin:${PATH}
-
 # RDoc
 RUN /bin/bash -l -c "gem install rdoc"
 
