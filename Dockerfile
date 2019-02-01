@@ -67,3 +67,17 @@ RUN curl -f -L -o /tmp/yarn.tgz https://github.com/yarnpkg/yarn/releases/downloa
 	&& tar xf /tmp/yarn.tgz \
 	&& mv yarn-v${YARN_VERSION} /opt/yarn \
 	&& ln -s /opt/yarn/bin/yarn /usr/local/bin/yarn
+
+# Ruby
+ENV RUBY_VERSION 2.6
+RUN yum -y install autoconf automake bison libffi-devel libtool readline-devel sqlite-devel zlib-devel openssl-devel
+RUN gpg --keyserver hkp://pool.sks-keyservers.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB \
+  && curl -sSL https://get.rvm.io | bash -s stable
+RUN /bin/bash -l -c "/etc/profile.d/rvm.sh && rvm reload && rvm install ruby-${RUBY_VERSION}"
+
+# RDoc
+RUN /bin/bash -l -c "gem install rdoc"
+
+# Fastlane
+RUN /bin/bash -l -c "gem install fastlane -NV"
+ENV FASTLANE_DISABLE_COLORS 1
