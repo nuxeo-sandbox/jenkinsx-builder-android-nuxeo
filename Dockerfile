@@ -66,3 +66,33 @@ RUN curl -f -L -o /tmp/yarn.tgz https://github.com/yarnpkg/yarn/releases/downloa
 	&& tar xf /tmp/yarn.tgz \
 	&& mv yarn-v${YARN_VERSION} /opt/yarn \
 	&& ln -s /opt/yarn/bin/yarn /usr/local/bin/yarn
+
+# Ruby
+# Inspired from https://github.com/drecom/docker-centos-ruby/blob/master/Dockerfile
+ARG RUBY_VERSION=2.6.1
+ARG RUBY_PATH=/usr/local
+ENV PATH $RUBY_PATH/bin:$PATH
+
+RUN yum -y install \
+        epel-release \
+        make \
+        gcc \
+        git \
+        openssl-devel \
+        readline-devel \
+        zlib-devel \
+        mysql-devel \
+        redis \
+        sqlite-devel
+RUN git clone git://github.com/rbenv/ruby-build.git $RUBY_PATH/plugins/ruby-build \
+  &&  $RUBY_PATH/plugins/ruby-build/install.sh
+RUN ruby-build $RUBY_VERSION $RUBY_PATH/
+
+RUN gem install bundler -N
+
+# RDoc
+RUN gem install rdoc
+
+# Fastlane
+RUN gem install fastlane -NV
+ENV FASTLANE_DISABLE_COLORS 1
