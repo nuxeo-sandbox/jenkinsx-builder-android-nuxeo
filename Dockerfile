@@ -1,59 +1,12 @@
-# Preliminary stage: ruby-build
-# -----------------------------
-FROM centos:7 AS rubybuild
-
-ARG RUBY_PATH=/usr/local
-ARG RUBY_VERSION=2.6.1
-RUN git clone git://github.com/rbenv/ruby-build.git $RUBY_PATH/plugins/ruby-build \
-  &&  $RUBY_PATH/plugins/ruby-build/install.sh
-RUN ruby-build $RUBY_VERSION $RUBY_PATH/
-
-# Final stage
-# -----------
 FROM jenkinsxio/builder-base:0.1.211
 
 # Locale settings
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 
-# Node.js
-RUN curl -f --silent --location https://rpm.nodesource.com/setup_11.x | bash - \
-  && yum install -y nodejs gcc-c++ make
-
-# Yarn
-ENV YARN_VERSION 1.13.0
-RUN curl -f -L -o /tmp/yarn.tgz https://github.com/yarnpkg/yarn/releases/download/v${YARN_VERSION}/yarn-v${YARN_VERSION}.tar.gz \
-	&& tar xf /tmp/yarn.tgz \
-	&& mv yarn-v${YARN_VERSION} /opt/yarn \
-	&& ln -s /opt/yarn/bin/yarn /usr/local/bin/yarn
-
-# Ruby
-ARG RUBY_PATH
-ENV PATH $RUBY_PATH/bin:$PATH
-RUN yum -y install \
-        epel-release \
-        make \
-        gcc \
-        git \
-        openssl-devel \
-        zlib-devel \
-        mysql-devel \
-        redis \
-        sqlite-devel
-COPY --from=rubybuild $RUBY_PATH $RUBY_PATH
-
-RUN gem install bundler -N
-
-# RDoc
-RUN gem install rdoc
-
-# Fastlane
-RUN gem install fastlane -NV
-ENV FASTLANE_DISABLE_COLORS 1
-
 # Gradle
-ENV GRADLE_VERSION 4.6
-ENV GRADLE_DOWNLOAD_SHA_256=98bd5fd2b30e070517e03c51cbb32beee3e2ee1a84003a5a5d748996d4b1b915
+ARG GRADLE_VERSION=4.6
+ARG GRADLE_DOWNLOAD_SHA_256=98bd5fd2b30e070517e03c51cbb32beee3e2ee1a84003a5a5d748996d4b1b915
 ENV GRADLE_HOME /opt/gradle
 
 RUN set -o errexit -o nounset \
@@ -75,8 +28,8 @@ RUN mkdir -p /root/.gradle \
 CMD ["gradle"]
 
 # Android SDK
-ENV ANDROID_VERSION 4333796
-ENV ANDROID_DOWNLOAD_SHA_256 92ffee5a1d98d856634e8b71132e8a95d96c83a63fde1099be3d86df3106def9
+ARG ANDROID_VERSION=4333796
+ARG ANDROID_DOWNLOAD_SHA_256=92ffee5a1d98d856634e8b71132e8a95d96c83a63fde1099be3d86df3106def9
 ENV ANDROID_HOME /opt/android-sdk-linux
 ENV PATH ${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools:${PATH}
 
@@ -103,3 +56,42 @@ RUN yes | sdkmanager \
     "platforms;android-26" \
     "extras;android;m2repository" \
     "extras;google;m2repository"
+
+# Node.js
+RUN curl -f --silent --location https://rpm.nodesource.com/setup_11.x | bash - \
+  && yum install -y nodejs gcc-c++ make
+
+# Yarn
+ARG YARN_VERSION=1.13.0
+RUN curl -f -L -o /tmp/yarn.tgz https://github.com/yarnpkg/yarn/releases/download/v${YARN_VERSION}/yarn-v${YARN_VERSION}.tar.gz \
+	&& tar xf /tmp/yarn.tgz \
+	&& mv yarn-v${YARN_VERSION} /opt/yarn \
+	&& ln -s /opt/yarn/bin/yarn /usr/local/bin/yarn
+
+# Ruby
+ARG RUBY_VERSION=2.6.1
+ARG RUBY_PATH=/usr/local
+RUN git clone git://github.com/rbenv/ruby-build.git $RUBY_PATH/plugins/ruby-build \
+  &&  $RUBY_PATH/plugins/ruby-build/install.sh
+RUN ruby-build $RUBY_VERSION $RUBY_PATH/
+
+ENV PATH $RUBY_PATH/bin:$PATH
+RUN yum -y install \
+        epel-release \
+        make \
+        gcc \
+        git \
+        openssl-devel \
+        zlib-devel \
+        mysql-devel \
+        redis \
+        sqlite-devel
+
+RUN gem install bundler -N
+
+# RDoc
+RUN gem install rdoc
+
+# Fastlane
+RUN gem install fastlane -NV
+ENV FASTLANE_DISABLE_COLORS 1
