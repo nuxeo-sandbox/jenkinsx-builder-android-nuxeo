@@ -78,6 +78,7 @@ RUN yum -y install \
         gcc \
         git \
         openssl-devel \
+        readline-devel \
         zlib-devel \
         mysql-devel \
         redis \
