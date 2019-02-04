@@ -1,11 +1,55 @@
-FROM jenkinsxio/builder-base:0.1.211
+# Preliminary stage: ruby-build
+# -----------------------------
+FROM centos:7 AS rubybuild
 
-# Run the Gradle Daemon on container execution for subsequent builds to be faster
-CMD ["gradle"]
+ARG RUBY_PATH=/usr/local
+ARG RUBY_VERSION=2.6.1
+RUN git clone git://github.com/rbenv/ruby-build.git $RUBY_PATH/plugins/ruby-build \
+  &&  $RUBY_PATH/plugins/ruby-build/install.sh
+RUN ruby-build $RUBY_VERSION $RUBY_PATH/
+
+# Final stage
+# -----------
+FROM jenkinsxio/builder-base:0.1.211
 
 # Locale settings
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
+
+# Node.js
+RUN curl -f --silent --location https://rpm.nodesource.com/setup_11.x | bash - \
+  && yum install -y nodejs gcc-c++ make
+
+# Yarn
+ENV YARN_VERSION 1.13.0
+RUN curl -f -L -o /tmp/yarn.tgz https://github.com/yarnpkg/yarn/releases/download/v${YARN_VERSION}/yarn-v${YARN_VERSION}.tar.gz \
+	&& tar xf /tmp/yarn.tgz \
+	&& mv yarn-v${YARN_VERSION} /opt/yarn \
+	&& ln -s /opt/yarn/bin/yarn /usr/local/bin/yarn
+
+# Ruby
+ARG RUBY_PATH
+ENV PATH $RUBY_PATH/bin:$PATH
+RUN yum -y install \
+        epel-release \
+        make \
+        gcc \
+        git \
+        openssl-devel \
+        zlib-devel \
+        mysql-devel \
+        redis \
+        sqlite-devel
+COPY --from=rubybuild $RUBY_PATH $RUBY_PATH
+
+RUN gem install bundler -N
+
+# RDoc
+RUN gem install rdoc
+
+# Fastlane
+RUN gem install fastlane -NV
+ENV FASTLANE_DISABLE_COLORS 1
 
 # Gradle
 ENV GRADLE_VERSION 4.6
@@ -26,6 +70,9 @@ ENV PATH ${GRADLE_HOME}/bin:${PATH}
 # Add a symlink in $USER_HOME/.gradle to the gradle.properties file mounted as a secret in a read-only volume
 RUN mkdir -p /root/.gradle \
   && ln -s /home/jenkins/.gradle/gradle.properties /root/.gradle/gradle.properties
+
+# Run the Gradle Daemon on container execution for subsequent builds to be faster
+CMD ["gradle"]
 
 # Android SDK
 ENV ANDROID_VERSION 4333796
@@ -56,28 +103,3 @@ RUN yes | sdkmanager \
     "platforms;android-26" \
     "extras;android;m2repository" \
     "extras;google;m2repository"
-
-# Node.js
-RUN curl -f --silent --location https://rpm.nodesource.com/setup_11.x | bash - \
-  && yum install -y nodejs gcc-c++ make
-
-# Yarn
-ENV YARN_VERSION 1.13.0
-RUN curl -f -L -o /tmp/yarn.tgz https://github.com/yarnpkg/yarn/releases/download/v${YARN_VERSION}/yarn-v${YARN_VERSION}.tar.gz \
-	&& tar xf /tmp/yarn.tgz \
-	&& mv yarn-v${YARN_VERSION} /opt/yarn \
-	&& ln -s /opt/yarn/bin/yarn /usr/local/bin/yarn
-
-# Ruby
-ENV RUBY_VERSION 2.6
-RUN yum -y install autoconf automake bison libffi-devel libtool readline-devel sqlite-devel zlib-devel openssl-devel
-RUN gpg --keyserver hkp://pool.sks-keyservers.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB \
-  && curl -sSL https://get.rvm.io | bash -s stable
-RUN /bin/bash -l -c "/etc/profile.d/rvm.sh && rvm reload && rvm install ruby-${RUBY_VERSION}"
-
-# RDoc
-RUN /bin/bash -l -c "gem install rdoc"
-
-# Fastlane
-RUN /bin/bash -l -c "gem install fastlane -NV"
-ENV FASTLANE_DISABLE_COLORS 1
