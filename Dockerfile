@@ -62,7 +62,7 @@ RUN curl -f --silent --location https://rpm.nodesource.com/setup_11.x | bash - \
   && yum install -y nodejs gcc-c++ make
 
 # Yarn
-# ENV YARN_VERSION 1.13.0
+ENV YARN_VERSION 1.13.0
 # RUN curl -f -L -o /tmp/yarn.tgz https://github.com/yarnpkg/yarn/releases/download/v${YARN_VERSION}/yarn-v${YARN_VERSION}.tar.gz \
 # 	&& tar xf /tmp/yarn.tgz \
 # 	&& mv yarn-v${YARN_VERSION} /opt/yarn \
