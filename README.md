@@ -96,6 +96,7 @@ jenkins:
           android-nuxeo:
             Image: <DOCKER_REGISTRY_IP>:<DOCKER_REGISTRY_PORT>/nuxeo-sandbox/builder-android-nuxeo 
             Privileged: true
+            AlwaysPullImage: true
             RequestCpu: "500m"
             RequestMemory: "2048Mi"
             LimitCpu: "1"
@@ -116,6 +117,8 @@ NAME                            TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S
 ...
 jenkins-x-docker-registry       ClusterIP   10.19.254.160   <none>        5000/TCP    2h
 ```
+
+Setting `AlwaysPullImage: true` ensures to always use the latest build of the Docker image.
 
 Proceed with the Jenkins X installation, the builder will be automatically added to the platform:
 ```
