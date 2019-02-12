@@ -100,7 +100,7 @@ jenkins:
             RequestCpu: "500m"
             RequestMemory: "2048Mi"
             LimitCpu: "1"
-            LimitMemory: "2048Mi"
+            LimitMemory: "4096Mi"
             Command: "/bin/sh -c"
             Args: "cat"
             Tty: true
@@ -119,6 +119,8 @@ jenkins-x-docker-registry       ClusterIP   10.19.254.160   <none>        5000/T
 ```
 
 Setting `AlwaysPullImage: true` ensures to always use the latest build of the Docker image.
+
+The `LimitMemory` is set to ensure enough available memory for the Gradle Daemon as mentioned above.
 
 Proceed with the Jenkins X installation, the builder will be automatically added to the platform:
 ```
