@@ -54,6 +54,11 @@ kubectl create secret generic gradle-config-secret --from-file=/path/to/my/gradl
 kubectl create secret generic nuxeo-java-keystore --from-file=/path/to/my/nuxeo.jks
 ```
 
+We also need to store the Google Play JSON key as a secret:
+```
+kubectl create secret generic googleplay-secret --from-file=/path/to/my/googleplay.json
+```
+
 ## Install the Builder 
 
 You can install your builder either when you install Jenkins X or update it.
@@ -74,6 +79,9 @@ jenkins:
         - type: Secret
           secretName: nuxeo-java-keystore
           mountPath: /home/jenkins/keystores
+        - type: Secret
+          secretName: googleplay-secret
+          mountPath: /home/jenkins/googleplay
         - type: Secret
           secretName: jenkins-docker-cfg
           mountPath: /home/jenkins/.docker
@@ -109,6 +117,10 @@ jenkins:
 The `gradle.properties` file must be in the `$USER_HOME/.gradle` directory. The pipelines are executed as `root`, yet the `gradle-config-secret` cannot be mounted as a volume in `/root/.gradle` since the filesystem on which a secret is mounted is read-only and Gradle needs to write in `$USER_HOME/.gradle` at build time. Therefore the `gradle-config-secret` is mounted as a volume in `/home/jenkins/.gradle` and a symlink is created in the [Dockerfile](Dockerfile) to make `/root/.gradle/gradle.properties` point to `/home/jenkins/.gradle/gradle.properties`.
 
 The `mountPath` for the `nuxeo-java-keystore` secret must match the value of the `NUXEO_RELEASE_STORE_FILE` property in the `gradle.properties` file stored as a secret, here: `/home/jenkins/keystores`.
+
+As the Fastlane `supply` action requires the `JSON_KEY_FILE` environment variable, it needs to be made available in the `android-nuxeo` container.
+This is currently done through the Jenkins configuration UI as we found no way to describe it in the yaml file.
+The `mountPath` for the `googleplay-secret` secret must be consistent with the value of `JSON_KEY_FILE`, in our case: `/home/jenkins/googleplay/googleplay.json`.
 
 Replace the Docker registry IP and port according to the output of the following command:
 ```
